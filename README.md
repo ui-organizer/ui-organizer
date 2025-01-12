@@ -16,19 +16,19 @@ npm install --save-dev typescript
 ```json
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es2020",
+    "module": "NodeNext",
+    "target": "es2022",
     "lib": [
-      "es6",
-      "dom",
-      "dom.iterable",
-      "scripthost"
+      "es2022",
+      "DOM",
+      "DOM.Iterable"
     ],
-    "isolatedModules": true,
-    "sourceMap": true,
+    "moduleResolution": "nodenext",
+    "sourceMap": true
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist"
   ]
 }
 ```
@@ -36,13 +36,12 @@ npm install --save-dev typescript
 ### Настройка webpack
 Для создания файлов ```javascript```, которые будут работать в браузере используйте любую библиотеку, например ```webpack```. Сначала установите ее:    
 ```
-npm install webpack webpack-cli ts-loader mini-css-extract-plugin ui-organizer-webpack-plugin --save-dev
+npm install webpack webpack-cli ts-loader ui-organizer-webpack-plugin --save-dev
 ```  
 
 Создайте файл ```webpack.config.js``` и добавьте в него скрипт:  
 ```javascript
 const path = require('path');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const UIOrganizerWebpackPlugin = require('ui-organizer-webpack-plugin');
 
 module.exports = {
@@ -70,7 +69,6 @@ module.exports = {
     ],
   },
   plugins: [
-    new MiniCssExtractPlugin(),
     new UIOrganizerWebpackPlugin(),
   ],
   resolve: {
@@ -80,14 +78,12 @@ module.exports = {
 ```  
 Здесь ```webpack``` находит файлы с расширением ```ts``` и использует загрузчик ```ts-loader``` для компиляции скриптов ```typescript``` в ```javascript```.  
 
-Также ```webpack``` ищет файлы с расширеним ```css``` и использует плагин ```MiniCssExtractPlugin```. Это необходимо для загрузки таблиц стилей, которые поставляются с библиотекой ```ui-organizer```.  
-
 Далее ```webpack``` используя плагин ```ui-organizer-webpack-plugin``` копирует файлы вендоров в католог, указанный в разделе конфигурации webpack - ```output.path```. Эти файлы поставляются с библиотекой ```ui-organizer```.
 
 ### Создание приложения
 В папке ```my-project``` создайте файл ```simple.ts``` и добавьте программный код:
 ```typescript
-/*Инструкции для WebPack, который скопирует эти файлы в ваш каталог*/
+/*Инструкции для WebPack, который скопирует эти файлы в ваш каталог ./dist*/
 import './index.html';
 import 'ui-organizer/page.css';
 import 'ui-organizer/style.css';
@@ -95,14 +91,11 @@ import 'ui-organizer/vars.css';
 
 /*Описание формы simpleForm*/
 import type {IForm, IButton, IProperty} from "ui-organizer";
-import { AppManager, Grouping, Flex, Input, Position, AlignSelf} from "ui-organizer";
+import { AppManager, Input, Position, AlignSelf} from "ui-organizer";
 
 export var form: IForm = <IForm>{
     type: 'IForm',
     name: 'simpleForm',
-    caption: 'Приложение',
-    flex: Flex.flexible,
-    grouping: Grouping.vertical,
 	  alignSelf: AlignSelf.topCenter,
     elements: [
         <IProperty>{
@@ -137,9 +130,11 @@ var Global: any = window;
 Global.AppManager = AppManager;
 Global.onpopstate = AppManager.onPopState;
 
-AppManager.parent = document.querySelector('#app');
 AppManager.add([form]);
-AppManager.open('simpleForm', {}, undefined);
+AppManager.init(document.querySelector('#app'))
+    .then(()=>{
+        AppManager.open('simpleForm', {});
+    })
 ```  
 На форму добавлено два свойства: объекты typescript, которые реализуют интерфейс ```IProperty```, и кнопка: объект typescript, который реализует интерфейс ```IButton```.  Ну, и сама форма: объект, который реализует интерфейс ```IForm```.
 
